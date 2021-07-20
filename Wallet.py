@@ -5,6 +5,7 @@
 # Distributed under MIT license
 # © Duino-Coin Community 2019-2021
 ##########################################
+import os
 import sys
 from base64 import b64decode, b64encode
 from configparser import ConfigParser
@@ -31,6 +32,8 @@ from webbrowser import open_new_tab
 from requests import get
 
 # Version number
+from EllipticCurves import EllipticCurves
+
 VERSION = 2.52
 # Colors
 BACKGROUND_COLOR = "#121212"
@@ -852,6 +855,9 @@ def currency_converter_window(handler):
 
 
 def statistics_window(handler):
+
+
+
     statsApi = get(
         "https://server.duinocoin.com"
         + "/api.json",
@@ -1973,6 +1979,14 @@ def send_funds_protocol(handler):
             + str(password),
             encoding="utf8"))
         response = soc.recv()
+
+        import EllipticCurves
+        curve = EllipticCurves.EllipticCurves()
+
+        message = str(recipientStr) + ":" + str(amountStr)
+        signature = curve.sign_transaction(message) # returns (r,s,message hash). Use this value to validate transaction on the server
+
+
         soc.send(
             bytes(
                 "SEND,"
@@ -1980,7 +1994,10 @@ def send_funds_protocol(handler):
                 + ","
                 + str(recipientStr)
                 + ","
-                + str(amountStr),
+                + str(amountStr)
+                + ","
+                +signature
+                ,
                 encoding="utf8"))
         response = soc.recv().rstrip("\n").split(",")
         soc.close()
@@ -2031,6 +2048,9 @@ def update_rich_presence():
 
 class Wallet:
     def __init__(self, master):
+
+
+
         global recipient
         global amount
         global balancetext
